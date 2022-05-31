@@ -1,6 +1,6 @@
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
-from text_explorer_functions import get_syntagmatic_data, plot_word_of_interest
+from text_explorer_functions import get_syntagmatic_data, plot_word_of_interest, concordancier
 from arango import ArangoClient
 
 client = ArangoClient(hosts="http://localhost:8529")
@@ -19,10 +19,11 @@ app.layout = html.Div([
 
     dcc.Textarea(
         id='textarea-example',
-        value='doc0sent0',
+        value='classe',
         style={'width': '100%', 'height': 300},
     ),
-    html.Div(id='textarea-example-output', style={'whiteSpace': 'pre-line'})
+    html.Div(id='textarea-example-output', style={'whiteSpace': 'pre-line'}),
+    html.Div(id='double_input_text', style={'whiteSpace': 'pre-line'})
 ])
 
 
@@ -35,6 +36,20 @@ def return_click(value):
         return 'sélectionner un point'
     else :
         return value['points'][0]['text']
+    
+
+@app.callback(
+    Output('double_input_text', 'children'),
+    [
+    Input('textarea-example', 'value'),
+    Input('graph_output','children')
+    ])
+
+def return_phrase(input1, input2):
+    concordancier_data = concordancier(input1,input2)
+    return concordancier_data
+    
+    
     
 @app.callback(
     Output('textarea-example-output', 'children'),
