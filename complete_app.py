@@ -27,6 +27,10 @@ app.layout = html.Div([
     Output('syntagmatic_graph','figure'),
     Input('co-occurence_graph','clickData')
 )
+
+## todo :
+
+### word of interest renvoie des tokens identiques au lemme mais pas les tokens contractés sous ce lemme
 def plot_syntagmatic(value):
     if value is None:
         return placeholder_plot("Sélectionner un point sur la vue d'ensemble pour explorer ses relations.")
