@@ -51,7 +51,6 @@ def make_edge(x, y, width,scaledWidth):
         x: a tuple of the x from and to, in the form: tuple([x0, x1, None])
         y: a tuple of the y from and to, in the form: tuple([y0, y1, None])
         width: The width of the line
-
     Returns:
         a Scatter plot which represents a line between the two points given. 
     """
@@ -190,13 +189,25 @@ def get_co_occurence_plot():
 
 
 def get_syntagmatic_data(word):
+    
+    doc_titles = pd.DataFrame(list(db.aql.execute(f"""for doc in docs
+filter doc.doc_number in [1,2]
+return {{'doc_title' : doc.doc_name,
+        'doc_number' : doc.doc_number}}""")))
+    
     data = pd.DataFrame(list(db.aql.execute(f'''
-    for token in tokens
-    filter token.token == '{word}'
-    let selected_token = token._id
+    
+ for lemma in lemmas 
+filter lemma.lemma == '{word}'
+let selected_lemma = lemma._id
+
+for v_lemma, e_lemma in 1..1
+inbound selected_lemma
+contracts_to
+let selected_tokens = v_lemma
 
     for v, e in 1..1 
-    any selected_token
+    any selected_tokens
     syntagmatic_link
     filter e.dep_relation != 'ROOT'
 
@@ -206,17 +217,34 @@ def get_syntagmatic_data(word):
             "head_pos_tag" : e.head_pos_tag
             }}
 
-
-                    ''')))    
+                    ''')))
+    
+     
+   
     
     # à remplacer avec une requette donnant le titre du document
     if data.shape == (0,0):
         return "Mot non trouvé"
     else :
-        data['doc'] = data['from_sentence'].str.extract('(doc\d+)')
+        data['doc'] = data['from_sentence'].str.extract('doc(\d+)')
+        data['doc'] = data['doc'].astype(int)
+        
+        doclist = data['doc'].drop_duplicates().tolist()
+        
+        doc_titles = pd.DataFrame(list(db.aql.execute(f"""for doc in docs
+filter doc.doc_number in {doclist}
+return {{'doc_title' : doc.doc_name,
+        'doc_number' : doc.doc_number}}""")))
+        
+        
+        data = data.merge(doc_titles, left_on='doc', right_on='doc_number')
+        #data['doc_title'] = data['doc_title'].str.extract('(\w+).')
+        data.drop('doc',axis=1, inplace=True)
+        data.rename(columns={'doc_title':'doc'},inplace=True)
         return data
     
     
+
 
 def plot_word_of_interest(word_of_interest):
     
@@ -292,7 +320,7 @@ def plot_word_of_interest(word_of_interest):
 
 
         # A MODIFIER : besoin d'un filtre capable de repérer les documents finit par .txt ? 
-        mask_doc = df_KKL.index.str.match('(doc)')
+        mask_doc = df_KKL.index.str.contains('.txt')
 
 
 
@@ -316,7 +344,7 @@ def plot_word_of_interest(word_of_interest):
         textposition='top center',
         marker_color=df_KKL['color'],
         marker_size=df_KKL['count'])
-        node_trace.text = df_KKL.index
+        node_trace.text = df_KKL.index.str.replace('.txt','',regex=False)
         
         fig = go.Figure(layout=layout)
         for trace in edge_trace:
@@ -326,6 +354,11 @@ def plot_word_of_interest(word_of_interest):
         fig.update_layout(showlegend = False,
                           height=800,title='Mots reliés')
         return fig
+    
+    
+        
+    
+    
     
     
     
@@ -341,4 +374,3 @@ def concordancier(root_word, dep_word):
                                       df_sentences['sentences']):
         list_sentences.append(f'Tiré du document : {doc} | ID de la phrase : {sentence} \n __ \n \n {content} \n __ \n \n')
     return ' '.join(list_sentences)
-    
