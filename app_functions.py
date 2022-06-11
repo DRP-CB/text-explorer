@@ -6,17 +6,9 @@ from sklearn.preprocessing import minmax_scale
 import networkx as nx
 
 import plotly.graph_objects as go
-
-
-import plotly.io as pio
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import minmax_scale
-import networkx as nx
-import plotly.graph_objects as go
 import plotly.io as pio
 
 import numpy as np
-from sklearn.preprocessing import minmax_scale
 
 client = ArangoClient(hosts="http://localhost:8529")
 sys_db = client.db('_system', username='root',password='root')
@@ -374,3 +366,6 @@ def concordancier(root_word, dep_word):
                                       df_sentences['sentences']):
         list_sentences.append(f'Tiré du document : {doc} | ID de la phrase : {sentence} \n __ \n \n {content} \n __ \n \n')
     return ' '.join(list_sentences)
+
+
+

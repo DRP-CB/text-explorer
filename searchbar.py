@@ -42,12 +42,15 @@ app.layout = dbc.Container([
                 html.Div(id='double_input_text', style={'whiteSpace': 'pre-line'})
         ]),
         dbc.Col([
-               dcc.Input(id="recherche", type="text", placeholder="Recherche", debounce=True,
+               dcc.Input(id="recherche", type="text", placeholder="Rechercher un ou plusieurs mots séparés par un espace", debounce=True,
                         style={'width':"100%"}),
-               dcc.Dropdown(['NYC', 'MTL', 'SF'], 'NYC', id='demo-dropdown',multi=True)
+               dcc.Dropdown(['NYC', 'MTL', 'SF'], 'NYC', id='demo-dropdown',multi=True),
+               html.Div(id='research-results')
         ])
     ])
 ], fluid=True)
+
+
 
 
 
@@ -56,9 +59,6 @@ app.layout = dbc.Container([
     Input('co-occurence_graph','clickData')
 )
 
-## todo :
-
-### word of interest renvoie des tokens identiques au lemme mais pas les tokens contractés sous ce lemme
 def plot_syntagmatic(value):
     if value is None:
         return placeholder_plot("Mots reliés","Sélectionner un point sur la vue d'ensemble pour explorer ses relations.")
@@ -96,6 +96,12 @@ def update_status(input1,input2):
         return (f'Mot racine : {extract_clickdata(input1)} | Mot relié : {extract_clickdata(input2)}')
      else :
         return ('Relation non sélectionnée.')
+    
+@app.callback(
+    Output('research-results','children'),
+    [Input('recherche','value')])
+def search_tokens(value):
+    return value
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
