@@ -1,11 +1,11 @@
  
     
 from dash import Dash, dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash
 import dash_bootstrap_components as dbc
 
-from app_functions import get_syntagmatic_data, plot_word_of_interest, concordancier, get_co_occurence_plot, extract_clickdata, placeholder_plot
+from app_functions import get_syntagmatic_data, plot_word_of_interest, concordancier, get_co_occurence_plot, extract_clickdata, placeholder_plot, search_tokens, get_doc_names, filter_on_docs, df_to_text, research_handler
 from arango import ArangoClient
 
 
@@ -42,10 +42,13 @@ app.layout = dbc.Container([
                 html.Div(id='double_input_text', style={'whiteSpace': 'pre-line'})
         ]),
         dbc.Col([
-               dcc.Input(id="recherche", type="text", placeholder="Rechercher un ou plusieurs mots séparés par un espace", debounce=True,
+               dcc.Input(id="recherche", type="text", placeholder="Rechercher un ou plusieurs mots séparés par un espace.",
                         style={'width':"100%"}),
-               dcc.Dropdown(['NYC', 'MTL', 'SF'], 'NYC', id='demo-dropdown',multi=True),
-               html.Div(id='research-results')
+               dcc.Dropdown(get_doc_names(), '',
+                            id='dropdown',
+                            multi=True,
+                            placeholder='Entrer des noms de documents pour y restreindre la recherche.'),
+               html.Div(id='research-results',style={'whiteSpace': 'pre-line'})
         ])
     ])
 ], fluid=True)
@@ -96,12 +99,15 @@ def update_status(input1,input2):
         return (f'Mot racine : {extract_clickdata(input1)} | Mot relié : {extract_clickdata(input2)}')
      else :
         return ('Relation non sélectionnée.')
-    
+
 @app.callback(
     Output('research-results','children'),
-    [Input('recherche','value')])
-def search_tokens(value):
-    return value
+    [Input('recherche','value'),
+     Input('dropdown','value')])
 
+def search(input1,input2):
+    doc_filter = input2
+    return research_handler(input1,doc_filter)
+    
 if __name__ == '__main__':
     app.run_server(debug=True)
