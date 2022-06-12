@@ -368,7 +368,8 @@ def concordancier(root_word, dep_word):
         list_sentences.append(f'Tiré du document : {doc} | ID de la phrase : {sentence} \n __ \n \n {content} \n __ \n \n')
     return ' '.join(list_sentences)
 
-def search_tokens(tokens_list,doclist=[]):
+
+def search_tokens(tokens_list):
     
     tokens_ids=  list(db.aql.execute(f'''let selection =  {tokens_list}
 for token in tokens 
@@ -413,14 +414,7 @@ return token._id'''))
         
         final_result = sentences.loc[match_index,:]
         return final_result
-    
-
-def filter_on_docs(df,doc_list):    
-    output =  df[df['from_doc'].isin(doc_list)]
-    if output is None:
-        return ('fail','no output')
-    elif output is not None:
-        return ('success',output)
+ 
     
 def df_to_text(df):
 
@@ -428,42 +422,6 @@ def df_to_text(df):
         for sentence, doc, similarity in zip(df['sentence'],
                                              df['from_doc'],
                                              df['similarity']):
-            list_sentences.append(f'Tiré du document : {doc} \n Prévalence dans la phrase : {similarity} \n  __\n \t {sentence} \n __ \n \n')
+            list_sentences.append(f'Tiré du document : {doc} \n Prévalence dans la phrase : {similarity:.3f} \n  __\n {sentence} \n __ \n')
         return ' '.join(list_sentences)
     
-    
-def research_handler(input1, input2):
-    if input1 is None and input2 is None:
-        return 'En attente de termes de recherche.'
-    elif input1 is not None and input2 is None:
-        df_search = search_tokens(input1.split(' '))
-        if df_search is None :
-            return "Mot non trouvé dans le corpus."
-        elif df_search.shape[0] == 0:
-            return "Un des mots recherchés est absent du corpus."
-        elif df_search.shape[0] > 0:
-            return df_to_text(df_search)
-    elif input1 is not None and input2 is not None:
-        df_search = search_tokens(input1.split(' '))
-        if df_search is None :
-            return "Mot non trouvé dans le corpus."
-        elif df_search.shape[0] == 0:
-            return "Un des mots recherchés est absent du corpus."
-        elif df_search.shape[0] > 0:
-            df_search_filtered = filter_on_docs(df_search,input2)
-            
-            if df_search_filtered[0] == 'fail':
-                return 'Terme absent dans les documents sélectionnés.'
-                
-                
-            elif df_search_filtered[0] == 'success' :
-                return df_to_text(df_search_filtered[1])
-    
-    
-
-def get_doc_names():
-
-     return list(db.aql.execute(''' 
-                   for doc in docs
-                   return doc.doc_name
-                   '''))
